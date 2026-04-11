@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
-  const { signIn, signUp, isCloud } = useAuth()
+  const { signIn, signUp, signOut, isCloud } = useAuth()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,12 +21,16 @@ export default function LoginPage() {
       if (error) {
         setError(error.message)
       } else {
-        setMessage('회원가입 완료! 이메일을 확인해주세요.')
+        // 회원가입 후 자동 로그인 방지 — 로그아웃시키고 로그인 탭으로 전환
+        await signOut()
+        setMessage('회원가입 완료! 로그인해주세요.')
+        setIsSignUp(false)
+        setPassword('')
       }
     } else {
       const { error } = await signIn(email, password)
       if (error) {
-        setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+        setError('이메일 또는 비밀번호가 올바르지 않습니다. 계정이 없으면 회원가입해주세요.')
       }
     }
 
@@ -36,16 +40,34 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">교실 자리배치</h1>
-          <p className="text-gray-500 mb-4">랜덤 자리배치 생성기</p>
-          <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
-            isSignUp
-              ? 'bg-red-100 text-red-700'
-              : 'bg-blue-100 text-blue-700'
-          }`}>
-            {isSignUp ? '회원가입' : '로그인'}
-          </div>
+          <p className="text-gray-500">랜덤 자리배치 생성기</p>
+        </div>
+
+        <div className="flex mb-6 rounded-lg overflow-hidden border border-gray-200">
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(false); setError(''); setMessage('') }}
+            className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
+              !isSignUp
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            로그인
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(true); setError(''); setMessage('') }}
+            className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
+              isSignUp
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            회원가입
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,14 +125,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(''); setMessage('') }}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            {isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}
-          </button>
-        </div>
 
         {!isCloud && (
           <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 text-center">

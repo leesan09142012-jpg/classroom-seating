@@ -95,7 +95,7 @@ export default function ClassroomSetup() {
     setCols(c);
   }, [inputRows, inputCols, rows, cols]);
 
-  // Toggle seat/empty
+  // Toggle seat/empty (click + drag)
   const toggleCell = useCallback((r, c) => {
     setRawGrid((prev) => {
       const next = prev.map((row) => row.map((cell) => ({ ...cell })));
@@ -104,6 +104,12 @@ export default function ClassroomSetup() {
       return next;
     });
   }, []);
+
+  const handlePointerEnter = useCallback((r, c, e) => {
+    // 마우스 버튼이 눌린 상태로 칸 위를 지나가면 토글
+    if (e.buttons !== 1) return;
+    toggleCell(r, c);
+  }, [toggleCell]);
 
   // Reset all to seats
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -186,6 +192,7 @@ export default function ClassroomSetup() {
             className="inline-grid gap-2"
             style={{
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              touchAction: 'none',
             }}
           >
             {grid.map((row, r) =>
@@ -196,6 +203,7 @@ export default function ClassroomSetup() {
                   <div
                     key={`${r}-${c}`}
                     onClick={() => toggleCell(r, c)}
+                    onPointerEnter={(e) => handlePointerEnter(r, c, e)}
                     className={[
                       'w-14 h-14 md:w-16 md:h-16 flex items-center justify-center',
                       'text-sm font-bold select-none cursor-pointer transition-all duration-150',
