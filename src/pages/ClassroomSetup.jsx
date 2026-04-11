@@ -95,7 +95,10 @@ export default function ClassroomSetup() {
     setCols(c);
   }, [inputRows, inputCols, rows, cols]);
 
-  // Toggle seat/empty (click + drag)
+  // Toggle seat/empty (click = 토글, drag = 삭제만)
+  const dragged = useRef(false);
+  const downCell = useRef(null);
+
   const toggleCell = useCallback((r, c) => {
     setRawGrid((prev) => {
       const next = prev.map((row) => row.map((cell) => ({ ...cell })));
@@ -105,10 +108,30 @@ export default function ClassroomSetup() {
     });
   }, []);
 
-  const handlePointerEnter = useCallback((r, c, e) => {
-    // 마우스 버튼이 눌린 상태로 칸 위를 지나가면 토글
+  const handleMouseDown = useCallback((r, c, e) => {
+    e.preventDefault();
+    dragged.current = false;
+    downCell.current = `${r}-${c}`;
+  }, []);
+
+  const handleMouseEnter = useCallback((r, c, e) => {
     if (e.buttons !== 1) return;
-    toggleCell(r, c);
+    dragged.current = true;
+    // 드래그 중엔 좌석→빈칸만
+    setRawGrid((prev) => {
+      if (prev[r][c].type === 'empty') return prev;
+      const next = prev.map((row) => row.map((cell) => ({ ...cell })));
+      next[r][c].type = 'empty';
+      return next;
+    });
+  }, []);
+
+  const handleMouseUp = useCallback((r, c) => {
+    // 드래그 없이 같은 칸에서 뗐으면 클릭(토글)
+    if (!dragged.current && downCell.current === `${r}-${c}`) {
+      toggleCell(r, c);
+    }
+    downCell.current = null;
   }, [toggleCell]);
 
   // Reset all to seats
@@ -193,7 +216,9 @@ export default function ClassroomSetup() {
             style={{
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               touchAction: 'none',
+              userSelect: 'none',
             }}
+            onDragStart={(e) => e.preventDefault()}
           >
             {grid.map((row, r) =>
               row.map((cell, c) => {
@@ -202,8 +227,9 @@ export default function ClassroomSetup() {
                 return (
                   <div
                     key={`${r}-${c}`}
-                    onClick={() => toggleCell(r, c)}
-                    onPointerEnter={(e) => handlePointerEnter(r, c, e)}
+                    onMouseDown={(e) => handleMouseDown(r, c, e)}
+                    onMouseEnter={(e) => handleMouseEnter(r, c, e)}
+                    onMouseUp={() => handleMouseUp(r, c)}
                     className={[
                       'w-14 h-14 md:w-16 md:h-16 flex items-center justify-center',
                       'text-sm font-bold select-none cursor-pointer transition-all duration-150',
