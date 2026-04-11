@@ -2,17 +2,19 @@ import { useState, useCallback, useRef } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ConfirmDialog from './components/ConfirmDialog'
-import { IconSchool, IconStudents, IconDice, IconClipboard } from './components/Icons'
+import { IconSchool, IconStudents, IconDice, IconUserPick, IconClipboard } from './components/Icons'
 import LoginPage from './pages/LoginPage'
 import ClassroomSetup from './pages/ClassroomSetup'
 import StudentManage from './pages/StudentManage'
 import SeatShuffle from './pages/SeatShuffle'
+import StudentPicker from './pages/StudentPicker'
 import History from './pages/History'
 
 const TABS = [
   { id: 'setup', label: '교실 설정', Icon: IconSchool },
   { id: 'students', label: '학생 관리', Icon: IconStudents },
   { id: 'shuffle', label: '자리 뽑기', Icon: IconDice },
+  { id: 'pick', label: '학생 뽑기', Icon: IconUserPick },
   { id: 'history', label: '히스토리', Icon: IconClipboard },
 ]
 
@@ -21,6 +23,7 @@ function TabContent({ activeTab, onUnsavedChange }) {
     case 'setup': return <ClassroomSetup />
     case 'students': return <StudentManage />
     case 'shuffle': return <SeatShuffle onUnsavedChange={onUnsavedChange} />
+    case 'pick': return <StudentPicker />
     case 'history': return <History />
     default: return null
   }
@@ -72,7 +75,7 @@ function MainApp() {
       {/* Header + Tab (sticky) */}
       <div className="sticky top-0 z-50">
         <header className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="max-w-full px-4 mx-auto flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-800">교실 자리배치</h1>
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-500">{user.email}</span>
@@ -87,7 +90,7 @@ function MainApp() {
         </header>
 
         <nav className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto flex">
+          <div className="max-w-full px-4 mx-auto flex">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -107,7 +110,7 @@ function MainApp() {
       </div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto p-4">
+      <main className="max-w-full px-4 mx-auto p-4">
         <TabContent activeTab={activeTab} onUnsavedChange={handleUnsavedChange} />
       </main>
 
@@ -118,8 +121,9 @@ function MainApp() {
         title="저장하지 않은 배치"
         message="현재 자리 뽑기 결과가 저장되지 않았습니다. 저장하지 않고 이동하시겠습니까?"
         confirmText="이동"
-        cancelText="돌아가기"
+        cancelText="취소"
         danger
+        confirmLeft
       />
     </div>
   )

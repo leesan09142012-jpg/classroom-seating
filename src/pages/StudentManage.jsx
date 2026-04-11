@@ -78,7 +78,7 @@ function BulkPasteModal({ onClose, onAdd }) {
   const handleSubmit = () => {
     const names = text
       .split(/[\n,\t]+/)
-      .map((s) => s.trim())
+      .map((s) => s.trim().replace(/[()（）]/g, ''))
       .filter(Boolean);
     if (names.length > 0) {
       onAdd(names);
@@ -101,7 +101,7 @@ function BulkPasteModal({ onClose, onAdd }) {
         <textarea
           ref={textareaRef}
           className="w-full h-40 border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder={"1 홍길동\n2 김철수\n3 이영희"}
+          placeholder={"홍길동\n이영희\n김철수"}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -153,26 +153,10 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
   const { grid, fixedByOthers } = useMemo(() => {
     if (!layout) return { grid: null, fixedByOthers: {} };
     let num = 1;
-    const g = layout.grid.map((row, r) =>
-      row.map((cell, c) => {
+    const filled = layout.grid.map((row) =>
+      row.map((cell) => {
         if (cell.type !== 'seat') return { ...cell, seatNumber: null };
-        if (cell.pairedWith) {
-          const [pr, pc] = cell.pairedWith;
-          if (pr < r || (pr === r && pc < c)) return { ...cell, seatNumber: null, _secondary: true };
-        }
         return { ...cell, seatNumber: num++ };
-      })
-    );
-    // Fill paired secondary
-    const filled = g.map((row, r) =>
-      row.map((cell, c) => {
-        if (cell._secondary && cell.pairedWith) {
-          const [pr, pc] = cell.pairedWith;
-          const primary = g[pr]?.[pc];
-          if (primary) return { ...cell, seatNumber: primary.seatNumber, _secondary: undefined };
-        }
-        const { _secondary, ...rest } = cell;
-        return rest;
       })
     );
     // Find fixed seats by other students
@@ -673,8 +657,9 @@ export default function StudentManage() {
       if (!trimmed) return;
 
       if (checkDuplicate(trimmed)) {
-        setDuplicateWarning(`"${trimmed}" 이름이 이미 존재합니다. 그래도 추가되었습니다.`);
+        setDuplicateWarning(`"${trimmed}" 이름이 이미 존재합니다.`);
         setTimeout(() => setDuplicateWarning(''), 3000);
+        return;
       }
 
       const newStudent = createStudent(trimmed);
@@ -710,13 +695,26 @@ export default function StudentManage() {
 
   const handleBulkAdd = useCallback(
     (names) => {
-      const dupes = names.filter((n) => checkDuplicate(n));
-      if (dupes.length > 0) {
-        setDuplicateWarning(`중복 이름 ${dupes.length}개가 포함되어 있습니다. 그래도 모두 추가되었습니다.`);
-        setTimeout(() => setDuplicateWarning(''), 3000);
+      // 기존 학생 + 입력 목록 내 중복 제거
+      const seen = new Set(students.map((s) => s.name));
+      const unique = [];
+      const dupes = [];
+      for (const name of names) {
+        const trimmed = name.trim();
+        if (seen.has(trimmed)) {
+          dupes.push(trimmed);
+        } else {
+          seen.add(trimmed);
+          unique.push(trimmed);
+        }
       }
+      if (dupes.length > 0) {
+        setDuplicateWarning(`중복 이름 ${dupes.length}개가 제외되었습니다: ${dupes.join(', ')}`);
+        setTimeout(() => setDuplicateWarning(''), 4000);
+      }
+      if (unique.length === 0) return;
 
-      const newStudents = names.map((name) => createStudent(name));
+      const newStudents = unique.map((name) => createStudent(name));
       setStudents((prev) => {
         const next = [...prev, ...newStudents];
         setGroups(rebuildGroups(next));
@@ -759,7 +757,7 @@ export default function StudentManage() {
   }, [students.length]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-900">학생 관리</h2>

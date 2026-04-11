@@ -6,6 +6,7 @@ const AuthContext = createContext(null)
 // ─── localStorage 폴백 인증 (Supabase 미설정 시) ───────────────────
 
 const LOCAL_AUTH_KEY = 'local-auth-user'
+const LOCAL_ACCOUNTS_KEY = 'local-auth-accounts'
 
 function getLocalUser() {
   try {
@@ -22,6 +23,26 @@ function setLocalUser(user) {
   } else {
     localStorage.removeItem(LOCAL_AUTH_KEY)
   }
+}
+
+function getAccounts() {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveAccounts(accounts) {
+  localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts))
+}
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 // ─── Provider ──────────────────────────────────────────────────────
@@ -58,8 +79,15 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signUp({ email, password })
       return { data, error }
     }
-    // 로컬 모드: 즉시 계정 생성
+    // 로컬 모드: 계정 생성 (비밀번호 해시 저장)
+    const accounts = getAccounts()
+    if (accounts[email]) {
+      return { data: null, error: { message: '이미 등록된 이메일입니다.' } }
+    }
+    const hashed = await hashPassword(password)
     const localUser = { id: 'local-' + Date.now(), email }
+    accounts[email] = { ...localUser, passwordHash: hashed }
+    saveAccounts(accounts)
     setLocalUser(localUser)
     setUser(localUser)
     return { data: { user: localUser }, error: null }
@@ -70,8 +98,17 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       return { data, error }
     }
-    // 로컬 모드: 이메일만 확인하고 로그인
-    const localUser = { id: 'local-' + Date.now(), email }
+    // 로컬 모드: 이메일 + 비밀번호 검증
+    const accounts = getAccounts()
+    const account = accounts[email]
+    if (!account) {
+      return { data: null, error: { message: '등록되지 않은 이메일입니다.' } }
+    }
+    const hashed = await hashPassword(password)
+    if (account.passwordHash !== hashed) {
+      return { data: null, error: { message: '비밀번호가 올바르지 않습니다.' } }
+    }
+    const localUser = { id: account.id, email }
     setLocalUser(localUser)
     setUser(localUser)
     return { data: { user: localUser }, error: null }

@@ -105,6 +105,15 @@ export function IconWarning(props) {
   );
 }
 
+export function IconUserPick(props) {
+  return (
+    <svg {...s} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 8v4m0 0v4m0-4h-4m4 0h4" />
+    </svg>
+  );
+}
+
 export function IconList(props) {
   return (
     <svg {...s} {...props}>

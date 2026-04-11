@@ -1,21 +1,12 @@
 import { useMemo } from 'react';
 
-const PAIR_COLORS = [
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f97316', // orange
-];
-
 /**
  * 교실 좌석 배치 그리드 컴포넌트 (읽기 전용 뷰)
  *
  * Props:
- *  - layout: { rows, cols, cells } — cells는 2D 배열 [row][col], 각 셀은 { type: 'seat'|'empty'|'paired', seatNumber, pairedWith }
+ *  - layout: { rows, cols, cells } — cells는 2D 배열 [row][col], 각 셀은 { type: 'seat'|'empty', seatNumber }
  *  - assignment: { [seatNumber]: studentName } — 좌석 번호별 학생 이름
- *  - constraints: { fixed: { studentName: seatNumber }, zoned: { studentName: zone }, paired: [[nameA, nameB]] }
+ *  - constraints: { fixed: { studentName: seatNumber }, zoned: { studentName: zone } }
  *  - onCellClick: (row, col, cell) => void
  *  - interactive: boolean — 클릭 가능 여부
  */
@@ -69,23 +60,6 @@ function Grid({
       });
     }
 
-    // 짝 고정 (🔗)
-    if (constraints.paired) {
-      constraints.paired.forEach(([nameA, nameB], idx) => {
-        const seatA = Object.entries(assignment).find(([, name]) => name === nameA)?.[0];
-        const seatB = Object.entries(assignment).find(([, name]) => name === nameB)?.[0];
-        const color = PAIR_COLORS[idx % PAIR_COLORS.length];
-        if (seatA) {
-          if (!map[seatA]) map[seatA] = {};
-          map[seatA].paired = { partner: nameB, color };
-        }
-        if (seatB) {
-          if (!map[seatB]) map[seatB] = {};
-          map[seatB].paired = { partner: nameA, color };
-        }
-      });
-    }
-
     return map;
   }, [constraints, assignment]);
 
@@ -118,8 +92,6 @@ function Grid({
             const seatNum = cell.seatNumber;
             const studentName = seatNum ? assignment[seatNum] : null;
             const constraint = seatNum ? constraintMap[seatNum] : null;
-            const isPaired = cell.type === 'paired';
-
             // 테두리 색상 결정
             let borderClass = 'border-gray-200 dark:border-gray-600';
             if (constraint?.fixed) {
@@ -146,7 +118,6 @@ function Grid({
                     ? 'cursor-pointer hover:shadow-md hover:scale-105 active:scale-95'
                     : ''
                   }
-                  ${isPaired ? 'ring-2 ring-purple-300 dark:ring-purple-600 ring-offset-1' : ''}
                 `}
               >
                 {/* 좌석 번호 */}
@@ -174,15 +145,6 @@ function Grid({
                         📍
                       </span>
                     )}
-                    {constraint.paired && (
-                      <span
-                        className="text-[10px] rounded-full w-4 h-4 flex items-center justify-center"
-                        style={{ backgroundColor: constraint.paired.color + '30' }}
-                        title={`짝: ${constraint.paired.partner}`}
-                      >
-                        🔗
-                      </span>
-                    )}
                   </div>
                 )}
               </div>
@@ -200,9 +162,6 @@ function Grid({
         <span className="flex items-center gap-1">
           <span className="inline-block w-3 h-3 border-2 border-blue-400 rounded" />
           📍 영역 지정
-        </span>
-        <span className="flex items-center gap-1">
-          🔗 짝 고정
         </span>
       </div>
     </div>

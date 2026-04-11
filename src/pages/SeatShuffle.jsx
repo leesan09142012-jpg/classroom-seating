@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import * as Tone from 'tone';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { IconSchool, IconStudents, IconDice, IconClipboard, IconSwap, IconUndo, IconSave, IconRefresh } from '../components/Icons';
 import { useAuth } from '../context/AuthContext';
@@ -21,72 +20,26 @@ const MAX_DEDUP_ATTEMPTS = 50;
 /** Build seat-number grid with numbering from a raw layout grid */
 function buildNumberedGrid(rawGrid) {
   let num = 1;
-  const numbered = rawGrid.map((row) =>
+  return rawGrid.map((row) =>
     row.map((cell) => {
-      if (cell.type === 'seat' || cell.type === 'paired') {
-        if (cell.pairedWith) {
-          const [pr, pc] = cell.pairedWith;
-          // Secondary of a pair — we'll fix after
-          // Determine if secondary: partner is to the left or above
-          // We can't reliably know row/col here, so mark null and fill later
-        }
-        return { ...cell };
+      if (cell.type === 'seat') {
+        return { ...cell, seatNumber: num++ };
       }
       return { ...cell, seatNumber: null };
-    })
-  );
-
-  // First pass: assign seat numbers to non-secondary seats
-  const grid = numbered.map((row, r) =>
-    row.map((cell, c) => {
-      if (cell.type !== 'seat') return { ...cell, seatNumber: null };
-      if (cell.pairedWith) {
-        const [pr, pc] = cell.pairedWith;
-        // This is the secondary if the partner is to the left or above
-        if (pr < r || (pr === r && pc < c)) {
-          return { ...cell, seatNumber: null, _secondary: true };
-        }
-      }
-      return { ...cell, seatNumber: num++ };
-    })
-  );
-
-  // Second pass: fill paired secondary cells with their partner's number
-  return grid.map((row, r) =>
-    row.map((cell, c) => {
-      if (cell._secondary && cell.pairedWith) {
-        const [pr, pc] = cell.pairedWith;
-        const primary = grid[pr]?.[pc];
-        if (primary) {
-          const { _secondary, ...rest } = cell;
-          return { ...rest, seatNumber: primary.seatNumber };
-        }
-      }
-      const { _secondary, ...rest } = cell;
-      return rest;
     })
   );
 }
 
 /** Collect all unique seat numbers and their grid positions */
 function collectSeats(grid) {
-  const seats = []; // { seatNumber, positions: [[r,c], ...] }
+  const seats = []; // { seatNumber, positions: [[r,c]] }
   const seen = new Set();
   for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
       const cell = grid[r][c];
       if (cell.type === 'seat' && cell.seatNumber != null && !seen.has(cell.seatNumber)) {
         seen.add(cell.seatNumber);
-        // Find all positions for this seat number (paired seats have 2)
-        const positions = [];
-        for (let rr = 0; rr < grid.length; rr++) {
-          for (let cc = 0; cc < grid[rr].length; cc++) {
-            if (grid[rr][cc].seatNumber === cell.seatNumber) {
-              positions.push([rr, cc]);
-            }
-          }
-        }
-        seats.push({ seatNumber: cell.seatNumber, positions });
+        seats.push({ seatNumber: cell.seatNumber, positions: [[r, c]] });
       }
     }
   }
@@ -95,7 +48,7 @@ function collectSeats(grid) {
 
 /**
  * Get adjacency pairs for a given assignment.
- * Adjacent = same row left/right 1 cell (not crossing empty), same column up/down 1 cell (not crossing empty), paired desk.
+ * Adjacent = same row left/right 1 cell (not crossing empty), same column up/down 1 cell (not crossing empty).
  * Diagonal = NOT adjacent.
  */
 function getAdjacencyPairs(grid, assignment) {
@@ -143,9 +96,7 @@ function getAdjacencyPairs(grid, assignment) {
       }
     }
 
-    // Paired desk adjacency (already covered by position adjacency above,
-    // but ensure paired desks are always adjacent regardless)
-  }
+    }
 
   return pairs;
 }
@@ -372,50 +323,47 @@ function performDedupAssignment(grid, students, groups, prevAdjPairs) {
   return best;
 }
 
-// ─── Sound helpers ─────────────────────────────────────────────────
+// ─── Sound helpers (Web Audio API) ────────────────────────────────
 
-let synth = null;
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
 
-function getSynth() {
-  if (!synth) {
-    synth = new Tone.Synth({
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 },
-    }).toDestination();
-  }
-  return synth;
+function beep(freq, duration, volume = 0.08) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch { /* ignore */ }
 }
 
 async function ensureAudioStarted() {
-  if (Tone.getContext().state !== 'running') {
-    await Tone.start();
-  }
+  const ctx = getAudioCtx();
+  if (ctx.state === 'suspended') await ctx.resume();
 }
 
 function playCountdownTick(soundEnabled) {
   if (!soundEnabled) return;
-  try {
-    getSynth().triggerAttackRelease('C5', '8n');
-  } catch { /* ignore */ }
+  beep(1000, 0.1, 0.1);
 }
 
 function playSlotClick(soundEnabled) {
   if (!soundEnabled) return;
-  try {
-    getSynth().triggerAttackRelease('G4', '16n');
-  } catch { /* ignore */ }
+  beep(800, 0.05, 0.06);
 }
 
 function playFanfare(soundEnabled) {
   if (!soundEnabled) return;
-  try {
-    const s = getSynth();
-    const now = Tone.now();
-    s.triggerAttackRelease('C5', '8n', now);
-    s.triggerAttackRelease('E5', '8n', now + 0.15);
-    s.triggerAttackRelease('G5', '8n', now + 0.3);
-    s.triggerAttackRelease('C6', '4n', now + 0.45);
-  } catch { /* ignore */ }
+  beep(1200, 0.4, 0.12);
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -816,7 +764,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
         )}
 
         {phase === 'slotmachine' && grid && (
-          <div className="w-full max-w-4xl px-4 overflow-auto">
+          <div className="w-full max-w-6xl px-4 overflow-auto">
             {/* Teacher's desk */}
             <div className="mb-4 mx-auto w-48 py-2 bg-white/10 rounded-lg text-center text-sm font-medium text-white/60 border border-white/20">
               교탁
@@ -882,7 +830,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
 
   // ── Main render ──
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -957,20 +905,19 @@ export default function SeatShuffle({ onUnsavedChange }) {
           {grid.map((row, r) =>
             row.map((cell, c) => {
               if (cell.type !== 'seat' || cell.seatNumber == null) {
-                return <div key={`${r}-${c}`} className="w-14 h-14 md:w-16 md:h-16" />;
+                return <div key={`${r}-${c}`} className="w-16 h-16 md:w-20 md:h-20" />;
               }
 
               const seatNum = cell.seatNumber;
               const studentName = phase === 'done' ? assignment[seatNum] : null;
               const isSwapSelected = swapMode && swapFirst === seatNum;
-              const isPaired = cell.pairedWith !== null;
 
               return (
                 <div
                   key={`${r}-${c}`}
                   onClick={() => phase === 'done' && swapMode && handleCellClick(seatNum)}
                   className={`
-                    relative w-14 h-14 md:w-16 md:h-16 flex flex-col items-center justify-center
+                    relative w-16 h-16 md:w-20 md:h-20 flex flex-col items-center justify-center
                     rounded-lg border p-1 text-xs sm:text-sm transition-all duration-150 select-none
                     ${studentName
                       ? 'bg-blue-50 border-blue-200'
@@ -984,7 +931,6 @@ export default function SeatShuffle({ onUnsavedChange }) {
                       ? 'cursor-pointer hover:shadow-md hover:scale-105 active:scale-95'
                       : ''
                     }
-                    ${isPaired ? 'ring-1 ring-purple-300 ring-offset-1' : ''}
                   `}
                 >
                   <span className="text-[10px] text-gray-400 leading-none">{seatNum}</span>
