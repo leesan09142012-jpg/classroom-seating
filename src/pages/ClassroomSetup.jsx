@@ -95,44 +95,28 @@ export default function ClassroomSetup() {
     setCols(c);
   }, [inputRows, inputCols, rows, cols]);
 
-  // Toggle seat/empty (click = 토글, drag = 삭제만)
-  const dragged = useRef(false);
-  const downCell = useRef(null);
+  // 편집 모드: 'erase' = 좌석 삭제, 'draw' = 좌석 생성
+  const [editMode, setEditMode] = useState('erase');
 
-  const toggleCell = useCallback((r, c) => {
+  const applyCell = useCallback((r, c) => {
     setRawGrid((prev) => {
+      const targetType = editMode === 'erase' ? 'empty' : 'seat';
+      if (prev[r][c].type === targetType) return prev;
       const next = prev.map((row) => row.map((cell) => ({ ...cell })));
-      const cell = next[r][c];
-      cell.type = cell.type === 'seat' ? 'empty' : 'seat';
+      next[r][c].type = targetType;
       return next;
     });
-  }, []);
+  }, [editMode]);
 
   const handleMouseDown = useCallback((r, c, e) => {
     e.preventDefault();
-    dragged.current = false;
-    downCell.current = `${r}-${c}`;
-  }, []);
+    applyCell(r, c);
+  }, [applyCell]);
 
   const handleMouseEnter = useCallback((r, c, e) => {
     if (e.buttons !== 1) return;
-    dragged.current = true;
-    // 드래그 중엔 좌석→빈칸만
-    setRawGrid((prev) => {
-      if (prev[r][c].type === 'empty') return prev;
-      const next = prev.map((row) => row.map((cell) => ({ ...cell })));
-      next[r][c].type = 'empty';
-      return next;
-    });
-  }, []);
-
-  const handleMouseUp = useCallback((r, c) => {
-    // 드래그 없이 같은 칸에서 뗐으면 클릭(토글)
-    if (!dragged.current && downCell.current === `${r}-${c}`) {
-      toggleCell(r, c);
-    }
-    downCell.current = null;
-  }, [toggleCell]);
+    applyCell(r, c);
+  }, [applyCell]);
 
   // Reset all to seats
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -197,9 +181,29 @@ export default function ClassroomSetup() {
               좌석 수: <span className="font-semibold text-gray-700">{seatCount}</span>
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            클릭: 좌석/복도 전환
-          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-xs text-gray-500">모드:</span>
+            <button
+              onClick={() => setEditMode('erase')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                editMode === 'erase'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              삭제
+            </button>
+            <button
+              onClick={() => setEditMode('draw')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                editMode === 'draw'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              생성
+            </button>
+          </div>
         </div>
 
         {/* Teacher's desk */}
@@ -229,7 +233,6 @@ export default function ClassroomSetup() {
                     key={`${r}-${c}`}
                     onMouseDown={(e) => handleMouseDown(r, c, e)}
                     onMouseEnter={(e) => handleMouseEnter(r, c, e)}
-                    onMouseUp={() => handleMouseUp(r, c)}
                     className={[
                       'w-14 h-14 md:w-16 md:h-16 flex items-center justify-center',
                       'text-sm font-bold select-none cursor-pointer transition-all duration-150',
