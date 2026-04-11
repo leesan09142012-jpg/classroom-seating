@@ -41,7 +41,7 @@ export default function LoginPage() {
           <p className="text-gray-500 mb-4">랜덤 자리배치 생성기</p>
           <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
             isSignUp
-              ? 'bg-orange-100 text-orange-700'
+              ? 'bg-red-100 text-red-700'
               : 'bg-blue-100 text-blue-700'
           }`}>
             {isSignUp ? '회원가입' : '로그인'}
@@ -95,7 +95,7 @@ export default function LoginPage() {
             disabled={loading}
             className={`w-full text-white py-2.5 rounded-lg font-medium disabled:opacity-50 transition-colors ${
               isSignUp
-                ? 'bg-orange-500 hover:bg-orange-600'
+                ? 'bg-red-600 hover:bg-red-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
