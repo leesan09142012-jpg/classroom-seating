@@ -38,7 +38,14 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">교실 자리배치</h1>
-          <p className="text-gray-500">랜덤 자리배치 생성기</p>
+          <p className="text-gray-500 mb-4">랜덤 자리배치 생성기</p>
+          <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${
+            isSignUp
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-blue-100 text-blue-700'
+          }`}>
+            {isSignUp ? '회원가입' : '로그인'}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,9 +93,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className={`w-full text-white py-2.5 rounded-lg font-medium disabled:opacity-50 transition-colors ${
+              isSignUp
+                ? 'bg-orange-500 hover:bg-orange-600'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
+            {loading ? '처리 중...' : isSignUp ? '회원가입하기' : '로그인하기'}
           </button>
         </form>
 
