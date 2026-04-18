@@ -2,7 +2,6 @@ import { useState, useCallback, useRef } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ConfirmDialog from './components/ConfirmDialog'
-import { IconSchool, IconStudents, IconDice, IconUserPick, IconClipboard } from './components/Icons'
 import LoginPage from './pages/LoginPage'
 import ClassroomSetup from './pages/ClassroomSetup'
 import StudentManage from './pages/StudentManage'
@@ -11,11 +10,11 @@ import StudentPicker from './pages/StudentPicker'
 import History from './pages/History'
 
 const TABS = [
-  { id: 'setup', label: '교실 설정', Icon: IconSchool },
-  { id: 'students', label: '학생 관리', Icon: IconStudents },
-  { id: 'shuffle', label: '자리 뽑기', Icon: IconDice },
-  { id: 'pick', label: '학생 뽑기', Icon: IconUserPick },
-  { id: 'history', label: '히스토리', Icon: IconClipboard },
+  { id: 'setup', label: '교실 설정' },
+  { id: 'students', label: '학생 관리' },
+  { id: 'shuffle', label: '자리 뽑기' },
+  { id: 'pick', label: '학생 뽑기' },
+  { id: 'history', label: '히스토리' },
 ]
 
 function TabContent({ activeTab, onUnsavedChange }) {
@@ -95,14 +94,13 @@ function MainApp() {
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <tab.Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                {tab.label}
               </button>
             ))}
           </div>
