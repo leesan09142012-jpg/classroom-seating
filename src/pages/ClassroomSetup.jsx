@@ -145,7 +145,25 @@ export default function ClassroomSetup({ onNavigate }) {
 
   // ─── 즉석 자리 뽑기 ─────────────────────────────────────────────
   const [assignment, setAssignment] = useState(null); // { seatNumber: studentName }
+  const [revealed, setRevealed] = useState(new Set()); // 공개된 좌석 번호
   const [shuffling, setShuffling] = useState(false);
+
+  const handleRevealSeat = useCallback((seatNumber) => {
+    if (!assignment || !assignment[seatNumber]) return;
+    setRevealed((prev) => {
+      const next = new Set(prev);
+      if (next.has(seatNumber)) next.delete(seatNumber);
+      else next.add(seatNumber);
+      return next;
+    });
+  }, [assignment]);
+
+  const handleRevealAll = useCallback(() => {
+    if (!assignment) return;
+    setRevealed(new Set(Object.keys(assignment).map(Number)));
+  }, [assignment]);
+
+  const handleHideAll = useCallback(() => setRevealed(new Set()), []);
 
   const handleQuickShuffle = useCallback(async () => {
     if (seatCount === 0 || shuffling) return;
@@ -171,6 +189,7 @@ export default function ClassroomSetup({ onNavigate }) {
         if (pool[i]) result[n] = pool[i].name;
       });
       setAssignment(result);
+      setRevealed(new Set());
     } catch {
       showToast('자리 뽑기에 실패했습니다.', 'error');
     } finally {
@@ -193,7 +212,10 @@ export default function ClassroomSetup({ onNavigate }) {
     }
   }, [assignment, user?.id, rows, cols, rawGrid, showToast]);
 
-  const handleClearShuffle = useCallback(() => setAssignment(null), []);
+  const handleClearShuffle = useCallback(() => {
+    setAssignment(null);
+    setRevealed(new Set());
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -204,6 +226,12 @@ export default function ClassroomSetup({ onNavigate }) {
           <div className="flex items-center gap-2">
             {assignment && (
               <>
+                <button
+                  onClick={revealed.size === Object.keys(assignment).length ? handleHideAll : handleRevealAll}
+                  className="px-3 py-2.5 text-sm font-medium text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  {revealed.size === Object.keys(assignment).length ? '모두 숨기기' : '모두 공개'}
+                </button>
                 <button
                   onClick={handleSaveShuffle}
                   className="px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
@@ -323,27 +351,39 @@ export default function ClassroomSetup({ onNavigate }) {
                 const isEmpty = cell.type === 'empty';
                 const studentName = !isEmpty && assignment ? assignment[cell.seatNumber] : null;
                 const hasStudent = !!studentName;
+                const isRevealed = hasStudent && revealed.has(cell.seatNumber);
 
                 return (
                   <div
                     key={`${r}-${c}`}
                     onMouseDown={(e) => !assignment && handleMouseDown(r, c, e)}
                     onMouseEnter={(e) => !assignment && handleMouseEnter(r, c, e)}
+                    onClick={() => assignment && hasStudent && handleRevealSeat(cell.seatNumber)}
                     className={[
                       'w-14 h-14 md:w-16 md:h-16 flex flex-col items-center justify-center',
                       'text-sm font-bold select-none transition-all duration-150',
-                      assignment ? '' : 'cursor-pointer',
+                      assignment ? (hasStudent ? 'cursor-pointer' : '') : 'cursor-pointer',
                       isEmpty
                         ? 'border-2 border-dashed border-gray-300 bg-gray-100 text-gray-300 rounded-lg hover:border-gray-400'
-                        : hasStudent
+                        : isRevealed
                         ? 'bg-blue-500 border-2 border-blue-600 text-white rounded-xl shadow-md'
+                        : hasStudent
+                        ? 'bg-white border-2 border-blue-400 text-blue-600 rounded-xl hover:bg-blue-50 hover:shadow-md'
                         : 'bg-blue-50 border-2 border-blue-300 text-blue-700 rounded-xl hover:bg-blue-100 hover:border-blue-400 hover:shadow-md',
                     ].join(' ')}
-                    title={isEmpty ? '빈 칸 (복도)' : hasStudent ? `${studentName} (좌석 #${cell.seatNumber})` : `좌석 #${cell.seatNumber ?? ''}`}
+                    title={
+                      isEmpty
+                        ? '빈 칸 (복도)'
+                        : isRevealed
+                        ? `${studentName} (좌석 #${cell.seatNumber})`
+                        : hasStudent
+                        ? `좌석 #${cell.seatNumber} (클릭하여 공개)`
+                        : `좌석 #${cell.seatNumber ?? ''}`
+                    }
                   >
                     {isEmpty ? (
                       <span className="text-lg">·</span>
-                    ) : hasStudent ? (
+                    ) : isRevealed ? (
                       <>
                         <span className="text-[9px] font-normal text-blue-100 leading-none">{cell.seatNumber}</span>
                         <span className="text-xs leading-tight mt-0.5 truncate max-w-full px-0.5">{studentName}</span>
