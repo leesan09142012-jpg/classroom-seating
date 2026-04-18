@@ -210,17 +210,6 @@ export default function StudentPicker() {
               : 'bg-gradient-to-br from-yellow-100 via-orange-100 to-pink-100 border-2 border-orange-400 shadow-2xl'
           }`}
         >
-          {/* spinning glow */}
-          {phase === 'spinning' && (
-            <div
-              className="absolute inset-0 opacity-50"
-              style={{
-                background: 'conic-gradient(from 0deg, transparent, rgba(59,130,246,0.3), transparent)',
-                animation: 'spin-bg 1.5s linear infinite',
-              }}
-            />
-          )}
-
           {phase === 'idle' && (
             <span className="text-6xl text-gray-300 select-none">🎲</span>
           )}
@@ -249,7 +238,6 @@ export default function StudentPicker() {
               60% { transform: scale(1.15); }
               100% { transform: scale(1); opacity: 1; }
             }
-            @keyframes spin-bg { to { transform: rotate(360deg); } }
           `}</style>
         </div>
       </div>
