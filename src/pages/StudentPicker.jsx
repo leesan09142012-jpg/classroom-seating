@@ -31,45 +31,6 @@ const playDing = () => {
   setTimeout(() => playTone(1320, 0.25, 0.18), 80);
 };
 
-// ─── 콘페티 ────────────────────────────────────────────────────────
-
-function Confetti({ active }) {
-  if (!active) return null;
-  const pieces = Array.from({ length: 50 }, (_, i) => i);
-  const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
-  return (
-    <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
-      {pieces.map((i) => {
-        const left = Math.random() * 100;
-        const delay = Math.random() * 0.3;
-        const duration = 1.5 + Math.random() * 1.5;
-        const color = colors[i % colors.length];
-        const size = 6 + Math.random() * 8;
-        const rotate = Math.random() * 360;
-        return (
-          <span
-            key={i}
-            className="absolute top-0 block"
-            style={{
-              left: `${left}%`,
-              width: `${size}px`,
-              height: `${size * 0.4}px`,
-              background: color,
-              transform: `rotate(${rotate}deg)`,
-              animation: `confetti-fall ${duration}s ${delay}s ease-out forwards`,
-            }}
-          />
-        );
-      })}
-      <style>{`
-        @keyframes confetti-fall {
-          to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 // ─── Main Component ────────────────────────────────────────────────
 
 export default function StudentPicker() {
@@ -81,7 +42,6 @@ export default function StudentPicker() {
   const [pickedHistory, setPickedHistory] = useState([]);
   const [excludePicked, setExcludePicked] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef(null);
   const slowTimerRef = useRef(null);
 
@@ -116,7 +76,6 @@ export default function StudentPicker() {
 
     setPhase('spinning');
     setPickedStudent(null);
-    setShowConfetti(false);
 
     const names = availableStudents.map((s) => s.name);
     const chosen = names[Math.floor(Math.random() * names.length)];
@@ -139,9 +98,7 @@ export default function StudentPicker() {
             setPickedStudent(chosen);
             setPhase('done');
             setPickedHistory((prev) => [...prev, chosen]);
-            setShowConfetti(true);
             if (soundEnabled) playDing();
-            setTimeout(() => setShowConfetti(false), 2500);
             return;
           }
           setDisplayName(names[Math.floor(Math.random() * names.length)]);
@@ -172,8 +129,6 @@ export default function StudentPicker() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      <Confetti active={showConfetti} />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">학생 뽑기</h2>
@@ -270,23 +225,50 @@ export default function StudentPicker() {
 
       {/* History */}
       {pickedHistory.length > 0 && (
-        <div className="border-t border-gray-100 pt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500">뽑기 기록</span>
-            <button onClick={handleClearHistory} className="text-xs text-gray-400 hover:text-red-500">
-              초기화
+        <div className="border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-bold text-gray-700">
+              뽑기 기록 <span className="text-gray-400 font-normal">({pickedHistory.length}명)</span>
+            </span>
+            <button
+              onClick={handleClearHistory}
+              className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded border border-gray-200 hover:border-red-200"
+            >
+              기록 초기화
             </button>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {pickedHistory.map((name, i) => (
-              <span
-                key={i}
-                className="px-2.5 py-1 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-full text-xs text-gray-700 font-medium"
-              >
-                {i + 1}. {name}
-              </span>
-            ))}
-          </div>
+          <ol className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden bg-white">
+            {[...pickedHistory].reverse().map((name, i) => {
+              const order = pickedHistory.length - i;
+              const isLatest = i === 0;
+              return (
+                <li
+                  key={`${order}-${name}`}
+                  className={`flex items-center gap-3 px-4 py-2.5 ${
+                    isLatest ? 'bg-orange-50' : ''
+                  }`}
+                >
+                  <span
+                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                      isLatest
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {order}
+                  </span>
+                  <span className={`text-sm ${isLatest ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
+                    {name}
+                  </span>
+                  {isLatest && (
+                    <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
+                      최근
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
         </div>
       )}
     </div>
