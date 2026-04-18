@@ -34,7 +34,7 @@ function stripGrid(grid) {
   );
 }
 
-export default function ClassroomSetup() {
+export default function ClassroomSetup({ onNavigate }) {
   const { user } = useAuth();
   const [initialLoaded, setInitialLoaded] = useState(false);
   const savedRef = useRef(null);
@@ -140,7 +140,17 @@ export default function ClassroomSetup() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">교실 설정</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">교실 설정</h1>
+          <button
+            onClick={() => onNavigate?.('shuffle')}
+            disabled={seatCount === 0}
+            className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+            title={seatCount === 0 ? '좌석이 없습니다' : '자리 뽑기 시작'}
+          >
+            자리 뽑기 →
+          </button>
+        </div>
 
         {/* Grid size controls */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
