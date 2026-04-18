@@ -545,28 +545,12 @@ export default function SeatShuffle({ onUnsavedChange }) {
     setSwapFirst(null);
     setUndoState(null);
     setSaved(false);
-    setFullscreen(true);
+    setFullscreen(false);
 
-    // ── Countdown phase ──
-    setPhase('countdown');
-    setCountdownNum(3);
-
-    let count = 3;
-    playCountdownTick(soundEnabled);
-
-    const doCountdown = () => {
-      count--;
-      if (count > 0) {
-        setCountdownNum(count);
-        playCountdownTick(soundEnabled);
-        countdownTimerRef.current = setTimeout(doCountdown, 800);
-      } else {
-        // Start slot machine
-        startSlotMachine(result.assignment);
-      }
-    };
-
-    countdownTimerRef.current = setTimeout(doCountdown, 800);
+    // 모션 없이 바로 결과 (이름은 클릭으로 공개)
+    setPhase('done');
+    setRevealed(new Set());
+    playFanfare(soundEnabled);
   }, [grid, students, groups, studentCount, seatCount, soundEnabled, getPrevAdjPairs]);
 
   // ── Slot machine animation ──
