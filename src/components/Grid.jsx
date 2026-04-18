@@ -39,7 +39,7 @@ function Grid({
   const constraintMap = useMemo(() => {
     const map = {};
 
-    // 고정 좌석 (🔒)
+    // 고정 좌석
     if (constraints.fixed) {
       Object.entries(constraints.fixed).forEach(([student, seat]) => {
         if (!map[seat]) map[seat] = {};
@@ -47,7 +47,7 @@ function Grid({
       });
     }
 
-    // 영역 지정 (📍)
+    // 영역 지정
     if (constraints.zoned) {
       // zoned는 학생→영역 매핑이므로, assignment를 역참조해서 seatNumber 찾기
       Object.entries(constraints.zoned).forEach(([student]) => {
@@ -136,13 +136,13 @@ function Grid({
                 {constraint && (
                   <div className="absolute -top-1.5 -right-1.5 flex gap-0.5">
                     {constraint.fixed && (
-                      <span className="text-[10px] bg-red-100 dark:bg-red-900/50 rounded-full w-4 h-4 flex items-center justify-center" title={`고정: ${constraint.fixed}`}>
-                        🔒
+                      <span className="text-[9px] font-bold text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 rounded-full w-4 h-4 flex items-center justify-center" title={`고정: ${constraint.fixed}`}>
+                        F
                       </span>
                     )}
                     {constraint.zoned && (
-                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 rounded-full w-4 h-4 flex items-center justify-center" title={`영역 지정: ${constraint.zoned}`}>
-                        📍
+                      <span className="text-[9px] font-bold text-blue-700 bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 rounded-full w-4 h-4 flex items-center justify-center" title={`영역 지정: ${constraint.zoned}`}>
+                        Z
                       </span>
                     )}
                   </div>
@@ -157,11 +157,11 @@ function Grid({
       <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
         <span className="flex items-center gap-1">
           <span className="inline-block w-3 h-3 border-2 border-red-400 rounded" />
-          🔒 고정 좌석
+          고정 좌석
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block w-3 h-3 border-2 border-blue-400 rounded" />
-          📍 영역 지정
+          영역 지정
         </span>
       </div>
     </div>
