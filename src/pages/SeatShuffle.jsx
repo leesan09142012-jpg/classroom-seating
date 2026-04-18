@@ -391,21 +391,20 @@ export default function SeatShuffle({ onUnsavedChange }) {
   const [swapFirst, setSwapFirst] = useState(null); // seatNumber
   const [undoState, setUndoState] = useState(null); // previous assignment for undo
 
-  // ── Reveal state ── (뽑기 결과를 클릭으로 공개)
+  // ── Reveal state ── (뽑기 결과를 클릭으로 공개, 한번 공개되면 유지)
   const [revealed, setRevealed] = useState(new Set());
   const handleRevealSeat = useCallback((seatNumber) => {
     if (swapMode) return;
     setRevealed((prev) => {
+      if (prev.has(seatNumber)) return prev;
       const next = new Set(prev);
-      if (next.has(seatNumber)) next.delete(seatNumber);
-      else next.add(seatNumber);
+      next.add(seatNumber);
       return next;
     });
   }, [swapMode]);
   const handleRevealAll = useCallback(() => {
     setRevealed(new Set(Object.keys(assignment).map(Number)));
   }, [assignment]);
-  const handleHideAll = useCallback(() => setRevealed(new Set()), []);
 
   // Refs for animation cleanup
   const slotTimerRef = useRef(null);
@@ -893,12 +892,14 @@ export default function SeatShuffle({ onUnsavedChange }) {
       {phase === 'done' && !swapMode && Object.keys(assignment).length > 0 && (
         <div className="flex justify-center items-center gap-2 mb-4 text-sm">
           <span className="text-gray-500">좌석을 클릭하면 학생 이름이 공개됩니다</span>
-          <button
-            onClick={revealed.size === Object.keys(assignment).length ? handleHideAll : handleRevealAll}
-            className="px-3 py-1 text-xs font-medium text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            {revealed.size === Object.keys(assignment).length ? '모두 숨기기' : '모두 공개'}
-          </button>
+          {revealed.size < Object.keys(assignment).length && (
+            <button
+              onClick={handleRevealAll}
+              className="px-3 py-1 text-xs font-medium text-blue-700 border border-blue-400 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              모두 공개
+            </button>
+          )}
         </div>
       )}
 
@@ -940,15 +941,15 @@ export default function SeatShuffle({ onUnsavedChange }) {
                   }}
                   className={`
                     relative w-16 h-16 md:w-20 md:h-20 flex flex-col items-center justify-center
-                    rounded-lg border p-1 text-xs sm:text-sm transition-all duration-150 select-none
+                    rounded-lg border-2 p-1 text-xs sm:text-sm transition-all duration-150 select-none
                     ${showName
-                      ? 'bg-blue-50 border-blue-200'
+                      ? 'bg-blue-50 border-blue-500'
                       : studentName
-                      ? 'bg-white border-blue-300 hover:bg-blue-50'
-                      : 'bg-white border-gray-200'
+                      ? 'bg-white border-blue-500 hover:bg-blue-50'
+                      : 'bg-white border-gray-400'
                     }
                     ${isSwapSelected
-                      ? 'ring-2 ring-red-400 ring-offset-1 bg-red-50 border-red-300 scale-105'
+                      ? 'ring-2 ring-red-500 ring-offset-1 bg-red-50 border-red-500 scale-105'
                       : ''
                     }
                     ${swapMode && phase === 'done' && assignment[seatNum]
