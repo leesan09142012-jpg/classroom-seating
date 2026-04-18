@@ -162,7 +162,7 @@ export default function StudentPicker() {
               ? 'bg-gray-50 border-2 border-dashed border-gray-300'
               : phase === 'spinning'
               ? 'bg-blue-50 border-2 border-blue-400 shadow-lg'
-              : 'bg-orange-50 border-2 border-orange-400 shadow-2xl'
+              : 'bg-blue-50 border-2 border-blue-500 shadow-2xl'
           }`}
         >
           {phase === 'idle' && (
@@ -179,8 +179,8 @@ export default function StudentPicker() {
           )}
           {phase === 'done' && (
             <div className="relative text-center z-10" style={{ animation: 'bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-              <div className="text-xs font-medium text-orange-600 mb-1">당첨</div>
-              <span className="text-5xl font-black text-orange-600 select-none">
+              <div className="text-xs font-medium text-blue-600 mb-1">당첨</div>
+              <span className="text-5xl font-black text-blue-600 select-none">
                 {pickedStudent}
               </span>
             </div>
@@ -217,7 +217,7 @@ export default function StudentPicker() {
       </div>
 
       {excludePicked && availableStudents.length === 0 && students.length > 0 && (
-        <p className="text-center text-sm text-amber-600 mb-4">
+        <p className="text-center text-sm text-blue-600 mb-4">
           모든 학생을 뽑았습니다.{' '}
           <button onClick={handleClearHistory} className="text-blue-600 underline">초기화</button>
         </p>
@@ -232,7 +232,7 @@ export default function StudentPicker() {
             </span>
             <button
               onClick={handleClearHistory}
-              className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded border border-gray-200 hover:border-red-200"
+              className="text-xs text-gray-500 hover:text-blue-600 px-2 py-1 rounded border border-gray-200 hover:border-blue-300"
             >
               기록 초기화
             </button>
