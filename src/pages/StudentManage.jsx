@@ -41,7 +41,7 @@ function SeatBadge({ seatNumber }) {
 function ZoneBadge({ zone }) {
   const count = Array.isArray(zone.seats) ? zone.seats.length : 0;
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
       <IconPin className="w-3 h-3" /> 구역 {count}개
     </span>
   );
@@ -277,7 +277,7 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
                 </p>
                 {/* Mini teacher desk */}
                 <div className="flex justify-center mb-2">
-                  <div className="bg-amber-100 border border-amber-300 rounded-lg px-6 py-1 text-xs font-medium text-amber-700">교탁</div>
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg px-6 py-1 text-xs font-medium text-gray-700">교탁</div>
                 </div>
                 {/* Grid */}
                 <div
@@ -359,12 +359,12 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
                 <p className="text-xs text-gray-500 mb-3">
                   좌석을 클릭하여 배치 가능 구역을 설정하세요. 줄 번호를 클릭하면 줄 전체를 선택합니다.
                   {zoneSeats.size > 0 && (
-                    <span className="ml-1 font-semibold text-green-600">{zoneSeats.size}개 선택됨</span>
+                    <span className="ml-1 font-semibold text-blue-600">{zoneSeats.size}개 선택됨</span>
                   )}
                 </p>
                 {/* Mini teacher desk */}
                 <div className="flex justify-center mb-2">
-                  <div className="bg-amber-100 border border-amber-300 rounded-lg px-6 py-1 text-xs font-medium text-amber-700">교탁</div>
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg px-6 py-1 text-xs font-medium text-gray-700">교탁</div>
                 </div>
                 {/* Grid */}
                 <div className="space-y-1 mb-3">
@@ -381,7 +381,7 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
                           onClick={() => toggleZoneRow(r)}
                           className={`w-6 flex items-center justify-center text-[10px] font-bold rounded transition-colors ${
                             allSelected
-                              ? 'text-green-600 bg-green-50'
+                              ? 'text-blue-600 bg-blue-50'
                               : 'text-gray-300 hover:text-gray-500 hover:bg-gray-50'
                           }`}
                           title={`${r + 1}줄 전체 선택`}
@@ -400,8 +400,8 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
                               onClick={() => toggleZoneSeat(seatNum)}
                               className={`w-9 h-9 rounded-md text-[11px] font-bold transition-all ${
                                 selected
-                                  ? 'bg-green-500 text-white ring-1 ring-green-300'
-                                  : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-green-50 hover:border-green-300'
+                                  ? 'bg-blue-500 text-white ring-1 ring-blue-300'
+                                  : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
                               }`}
                             >
                               {seatNum}
@@ -415,7 +415,7 @@ function ConstraintModal({ student, allStudents, groups, onClose, onSave }) {
                 {/* Legend */}
                 <div className="flex justify-center gap-4 text-[10px] text-gray-400">
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 bg-green-500 rounded-sm inline-block" /> 배치 가능
+                    <span className="w-3 h-3 bg-blue-500 rounded-sm inline-block" /> 배치 가능
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 bg-gray-50 border border-gray-200 rounded-sm inline-block" /> 미선택
@@ -793,7 +793,7 @@ export default function StudentManage() {
 
         {/* Duplicate Warning */}
         {duplicateWarning && (
-          <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+          <div className="mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
             <IconWarning className="w-3.5 h-3.5 shrink-0" /> {duplicateWarning}
           </div>
         )}

@@ -208,8 +208,8 @@ export default function ClassroomSetup() {
 
         {/* Teacher's desk */}
         <div className="flex justify-center mb-6">
-          <div className="bg-amber-100 border-2 border-amber-300 rounded-xl px-12 py-3 text-center shadow-sm">
-            <span className="text-amber-800 font-bold text-lg tracking-wider">교 탁</span>
+          <div className="bg-gray-100 border-2 border-gray-300 rounded-xl px-12 py-3 text-center shadow-sm">
+            <span className="text-gray-800 font-bold text-lg tracking-wider">교 탁</span>
           </div>
         </div>
 

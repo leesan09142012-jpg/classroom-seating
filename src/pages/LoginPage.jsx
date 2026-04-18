@@ -107,7 +107,7 @@ export default function LoginPage() {
           )}
 
           {message && (
-            <div className="bg-green-50 text-green-600 text-sm p-3 rounded-lg">
+            <div className="bg-blue-50 text-blue-600 text-sm p-3 rounded-lg">
               {message}
             </div>
           )}
@@ -127,7 +127,7 @@ export default function LoginPage() {
 
 
         {!isCloud && (
-          <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 text-center">
+          <div className="mt-4 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 text-center">
             로컬 모드: 데이터가 이 브라우저에만 저장됩니다.
           </div>
         )}

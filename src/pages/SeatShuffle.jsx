@@ -731,7 +731,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
   // ── Fullscreen countdown overlay ──
   if (fullscreen && (phase === 'countdown' || phase === 'slotmachine')) {
     return (
-      <div className="fixed inset-0 z-[200] bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex flex-col items-center justify-center">
+      <div className="fixed inset-0 z-[200] bg-gray-900 flex flex-col items-center justify-center">
         {/* Sound toggle */}
         <button
           onClick={() => setSoundEnabled((v) => !v)}
@@ -796,7 +796,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
                         aspect-square rounded-lg border p-1
                         text-xs sm:text-sm transition-all duration-200
                         ${isStopped
-                          ? 'bg-green-500/20 border-green-400/60 scale-105'
+                          ? 'bg-blue-500/20 border-blue-400/60 scale-105'
                           : 'bg-white/10 border-white/20'
                         }
                       `}
@@ -804,7 +804,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
                       <span className="text-[10px] text-white/40 leading-none">{seatNum}</span>
                       <span
                         className={`font-bold truncate w-full text-center leading-tight mt-0.5 ${
-                          isStopped ? 'text-green-300' : 'text-white/80'
+                          isStopped ? 'text-blue-300' : 'text-white/80'
                         }`}
                       >
                         {displayName}
@@ -882,15 +882,15 @@ export default function SeatShuffle({ onUnsavedChange }) {
 
       {/* Save success */}
       {saveSuccess && (
-        <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-medium text-center">
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700 font-medium text-center">
           저장되었습니다!
         </div>
       )}
 
       {/* Teacher's desk */}
       <div className="flex justify-center mb-4">
-        <div className="bg-amber-100 border-2 border-amber-300 rounded-xl px-12 py-2 text-center shadow-sm">
-          <span className="text-amber-800 font-bold text-sm tracking-wider">교 탁</span>
+        <div className="bg-gray-100 border-2 border-gray-300 rounded-xl px-12 py-2 text-center shadow-sm">
+          <span className="text-gray-800 font-bold text-sm tracking-wider">교 탁</span>
         </div>
       </div>
 
@@ -924,7 +924,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
                       : 'bg-white border-gray-200'
                     }
                     ${isSwapSelected
-                      ? 'ring-2 ring-orange-400 ring-offset-1 bg-orange-50 border-orange-300 scale-105'
+                      ? 'ring-2 ring-red-400 ring-offset-1 bg-red-50 border-red-300 scale-105'
                       : ''
                     }
                     ${swapMode && phase === 'done' && assignment[seatNum]
@@ -951,10 +951,10 @@ export default function SeatShuffle({ onUnsavedChange }) {
         {phase === 'idle' && (
           <div className="flex flex-col items-center gap-3">
             {studentCount !== seatCount && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700 text-center">
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 text-center">
                 학생 수({studentCount}명)와 좌석 수({seatCount}개)가 일치하지 않습니다.
                 <br />
-                <span className="text-xs text-amber-500">학생 관리 또는 교실 설정을 확인해주세요.</span>
+                <span className="text-xs text-red-500">학생 관리 또는 교실 설정을 확인해주세요.</span>
               </div>
             )}
             <div className="flex flex-wrap justify-center gap-3">
@@ -986,7 +986,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
               }}
               className={`px-5 py-2.5 text-sm font-medium rounded-xl border transition-colors ${
                 swapMode
-                  ? 'bg-orange-100 border-orange-300 text-orange-700'
+                  ? 'bg-red-100 border-red-300 text-red-700'
                   : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -1006,7 +1006,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
             {/* Save */}
             <button
               onClick={handleSave}
-              className="px-5 py-2.5 text-sm font-medium rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
+              className="px-5 py-2.5 text-sm font-medium rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <IconSave className="w-4 h-4" /> 저장
             </button>
@@ -1022,7 +1022,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
         )}
 
         {swapMode && phase === 'done' && (
-          <p className="text-sm text-orange-600 font-medium">
+          <p className="text-sm text-red-600 font-medium">
             {swapFirst != null
               ? `${assignment[swapFirst]}을(를) 선택했습니다. 교환할 학생을 클릭하세요.`
               : '교환할 첫 번째 학생을 클릭하세요.'}

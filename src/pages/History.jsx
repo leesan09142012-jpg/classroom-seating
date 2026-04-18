@@ -530,7 +530,7 @@ function FullGridPreview({ layout, assignment }) {
     <div className="w-full">
       {/* Teacher desk */}
       <div className="flex justify-center mb-3">
-        <div className="bg-amber-100 border border-amber-300 rounded-lg px-8 py-1.5 text-xs font-medium text-amber-700">교탁</div>
+        <div className="bg-gray-100 border border-gray-300 rounded-lg px-8 py-1.5 text-xs font-medium text-gray-700">교탁</div>
       </div>
       <div
         className="grid gap-1.5 justify-center mx-auto"
