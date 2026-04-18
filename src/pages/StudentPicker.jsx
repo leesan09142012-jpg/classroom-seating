@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { loadStudents as dsLoadStudents } from '../lib/dataService';
 
-// ─── 간단한 Web Audio 효과음 ──────────────────────────────────────
+// ─── 효과음 ────────────────────────────────────────────────────────
 
 let audioCtx = null;
 function getAudioCtx() {
@@ -10,34 +10,64 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-function playTick() {
+function playTone(freq, duration = 0.05, volume = 0.08, type = 'sine') {
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 800;
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     osc.connect(gain).connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.05);
+    osc.stop(ctx.currentTime + duration);
   } catch { /* ignore */ }
 }
 
-function playDing() {
-  try {
-    const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 1200;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
-  } catch { /* ignore */ }
+const playTick = () => playTone(800, 0.04, 0.06);
+const playDing = () => {
+  playTone(880, 0.15, 0.18);
+  setTimeout(() => playTone(1320, 0.25, 0.18), 80);
+};
+
+// ─── 콘페티 ────────────────────────────────────────────────────────
+
+function Confetti({ active }) {
+  if (!active) return null;
+  const pieces = Array.from({ length: 50 }, (_, i) => i);
+  const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+  return (
+    <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
+      {pieces.map((i) => {
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.3;
+        const duration = 1.5 + Math.random() * 1.5;
+        const color = colors[i % colors.length];
+        const size = 6 + Math.random() * 8;
+        const rotate = Math.random() * 360;
+        return (
+          <span
+            key={i}
+            className="absolute top-0 block"
+            style={{
+              left: `${left}%`,
+              width: `${size}px`,
+              height: `${size * 0.4}px`,
+              background: color,
+              transform: `rotate(${rotate}deg)`,
+              animation: `confetti-fall ${duration}s ${delay}s ease-out forwards`,
+            }}
+          />
+        );
+      })}
+      <style>{`
+        @keyframes confetti-fall {
+          to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -51,6 +81,7 @@ export default function StudentPicker() {
   const [pickedHistory, setPickedHistory] = useState([]);
   const [excludePicked, setExcludePicked] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef(null);
   const slowTimerRef = useRef(null);
 
@@ -85,6 +116,7 @@ export default function StudentPicker() {
 
     setPhase('spinning');
     setPickedStudent(null);
+    setShowConfetti(false);
 
     const names = availableStudents.map((s) => s.name);
     const chosen = names[Math.floor(Math.random() * names.length)];
@@ -95,19 +127,21 @@ export default function StudentPicker() {
       if (soundEnabled) playTick();
       tick++;
 
-      if (tick >= 15) {
+      if (tick >= 18) {
         clearInterval(timerRef.current);
         timerRef.current = null;
 
         let slowTick = 0;
-        const delays = [150, 200, 280, 380, 500];
+        const delays = [150, 220, 320, 450, 600];
         const doSlow = () => {
           if (slowTick >= delays.length) {
             setDisplayName(chosen);
             setPickedStudent(chosen);
             setPhase('done');
             setPickedHistory((prev) => [...prev, chosen]);
+            setShowConfetti(true);
             if (soundEnabled) playDing();
+            setTimeout(() => setShowConfetti(false), 2500);
             return;
           }
           setDisplayName(names[Math.floor(Math.random() * names.length)]);
@@ -117,7 +151,7 @@ export default function StudentPicker() {
         };
         doSlow();
       }
-    }, 70);
+    }, 65);
   }, [availableStudents, soundEnabled]);
 
   const handleClearHistory = useCallback(() => {
@@ -138,14 +172,16 @@ export default function StudentPicker() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
+      <Confetti active={showConfetti} />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">학생 뽑기</h2>
         <button
           onClick={() => setSoundEnabled((v) => !v)}
-          className="text-xs text-gray-400 hover:text-gray-600"
+          className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 rounded border border-gray-200"
         >
-          {soundEnabled ? '소리 ON' : '소리 OFF'}
+          {soundEnabled ? '🔊 소리 ON' : '🔇 소리 OFF'}
         </button>
       </div>
 
@@ -165,20 +201,56 @@ export default function StudentPicker() {
 
       {/* Display */}
       <div className="flex justify-center mb-6">
-        <div className="w-80 h-52 flex items-center justify-center rounded-xl border-2 border-gray-200 bg-white">
+        <div
+          className={`relative w-80 h-56 flex items-center justify-center rounded-2xl overflow-hidden transition-all duration-300 ${
+            phase === 'idle'
+              ? 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300'
+              : phase === 'spinning'
+              ? 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 border-2 border-blue-400 shadow-lg'
+              : 'bg-gradient-to-br from-yellow-100 via-orange-100 to-pink-100 border-2 border-orange-400 shadow-2xl'
+          }`}
+        >
+          {/* spinning glow */}
+          {phase === 'spinning' && (
+            <div
+              className="absolute inset-0 opacity-50"
+              style={{
+                background: 'conic-gradient(from 0deg, transparent, rgba(59,130,246,0.3), transparent)',
+                animation: 'spin-bg 1.5s linear infinite',
+              }}
+            />
+          )}
+
           {phase === 'idle' && (
-            <span className="text-4xl text-gray-200 select-none">?</span>
+            <span className="text-6xl text-gray-300 select-none">🎲</span>
           )}
           {phase === 'spinning' && (
-            <span className="text-2xl font-bold text-blue-600 select-none">
+            <span
+              key={displayName}
+              className="relative text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent select-none z-10"
+              style={{ animation: 'pop 0.1s ease-out' }}
+            >
               {displayName}
             </span>
           )}
           {phase === 'done' && (
-            <span className="text-3xl font-black text-gray-900 select-none">
-              {pickedStudent}
-            </span>
+            <div className="relative text-center z-10" style={{ animation: 'bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+              <div className="text-xs font-medium text-orange-600 mb-1">🎉 당첨</div>
+              <span className="text-5xl font-black bg-gradient-to-r from-orange-600 via-red-500 to-pink-600 bg-clip-text text-transparent select-none">
+                {pickedStudent}
+              </span>
+            </div>
           )}
+
+          <style>{`
+            @keyframes pop { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+            @keyframes bounce-in {
+              0% { transform: scale(0.3); opacity: 0; }
+              60% { transform: scale(1.15); }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            @keyframes spin-bg { to { transform: rotate(360deg); } }
+          `}</style>
         </div>
       </div>
 
@@ -187,14 +259,14 @@ export default function StudentPicker() {
         <button
           onClick={handlePick}
           disabled={phase === 'spinning' || availableStudents.length === 0}
-          className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          {phase === 'done' ? '다시 뽑기' : '뽑기'}
+          {phase === 'done' ? '🎲 다시 뽑기' : '🎲 뽑기'}
         </button>
         {phase === 'done' && (
           <button
             onClick={() => { setPhase('idle'); setDisplayName(''); setPickedStudent(null); }}
-            className="px-6 py-2.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+            className="px-6 py-3 text-sm font-medium rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
           >
             초기화
           </button>
@@ -219,7 +291,10 @@ export default function StudentPicker() {
           </div>
           <div className="flex flex-wrap gap-1.5">
             {pickedHistory.map((name, i) => (
-              <span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700">
+              <span
+                key={i}
+                className="px-2.5 py-1 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-full text-xs text-gray-700 font-medium"
+              >
                 {i + 1}. {name}
               </span>
             ))}
