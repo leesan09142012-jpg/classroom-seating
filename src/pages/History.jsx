@@ -22,6 +22,40 @@ function formatDate(dateStr) {
   return `${yyyy}년 ${mm}월 ${dd}일 ${hh}:${min}`;
 }
 
+function formatDateShort(dateStr) {
+  const d = new Date(dateStr);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const day = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+  return `${mm}/${dd} (${day})`;
+}
+
+function formatTime(dateStr) {
+  const d = new Date(dateStr);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${min}`;
+}
+
+function formatRelative(dateStr) {
+  const now = new Date();
+  const d = new Date(dateStr);
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  const days = Math.floor(diff / 86400);
+  if (days < 7) return `${days}일 전`;
+  if (days < 30) return `${Math.floor(days / 7)}주 전`;
+  if (days < 365) return `${Math.floor(days / 30)}개월 전`;
+  return `${Math.floor(days / 365)}년 전`;
+}
+
+function getLayoutDims(layout) {
+  if (!layout) return null;
+  return `${layout.rows} × ${layout.cols}`;
+}
+
 function getStudentCount(assignment) {
   if (!assignment) return 0;
   return Object.values(assignment).filter(Boolean).length;
@@ -348,12 +382,34 @@ export default function History() {
               {/* Card header - always visible */}
               <div
                 onClick={() => setSelectedIndex(isOpen ? null : index)}
-                className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none"
+                className="flex items-center gap-4 px-6 py-5 cursor-pointer select-none"
               >
-                {/* Date & info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">{formatDate(record.date)}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">학생 {count}명</p>
+                {/* Date column - bigger and clearer */}
+                <div className="shrink-0 text-center w-20">
+                  <div className="text-2xl font-bold text-gray-900 leading-tight">
+                    {formatDateShort(record.date)}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {formatTime(record.date)}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="w-px h-12 bg-gray-200 shrink-0" />
+
+                {/* Info badges */}
+                <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                    학생 {count}명
+                  </span>
+                  {getLayoutDims(record.layout) && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
+                      {getLayoutDims(record.layout)} 자리
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400">
+                    {formatRelative(record.date)}
+                  </span>
                 </div>
 
                 {/* Mini preview */}
@@ -397,7 +453,12 @@ export default function History() {
 
               {/* Expanded content */}
               {isOpen && (
-                <div className="border-t border-gray-100 px-5 py-4">
+                <div className="border-t border-gray-100 px-6 py-5">
+                  {/* Full date */}
+                  <p className="text-xs text-gray-500 mb-3">
+                    {formatDate(record.date)}
+                  </p>
+
                   {/* Action buttons */}
                   <div className="flex gap-2 mb-4">
                     <button
@@ -491,7 +552,7 @@ function MiniGridPreview({ layout, assignment }) {
             return (
               <div
                 key={`${r}-${c}`}
-                className="w-2.5 h-2.5 rounded-sm"
+                className="w-3 h-3 rounded-sm"
               />
             );
           }
@@ -500,9 +561,9 @@ function MiniGridPreview({ layout, assignment }) {
           return (
             <div
               key={`${r}-${c}`}
-              className={`w-2.5 h-2.5 rounded-sm ${
+              className={`w-3 h-3 rounded-sm ${
                 hasStudent
-                  ? 'bg-blue-400'
+                  ? 'bg-blue-500'
                   : 'bg-gray-200'
               }`}
             />
