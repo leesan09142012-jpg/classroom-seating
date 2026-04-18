@@ -159,10 +159,10 @@ export default function StudentPicker() {
         <div
           className={`relative w-80 h-56 flex items-center justify-center rounded-2xl overflow-hidden transition-all duration-300 ${
             phase === 'idle'
-              ? 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300'
+              ? 'bg-gray-50 border-2 border-dashed border-gray-300'
               : phase === 'spinning'
-              ? 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 border-2 border-blue-400 shadow-lg'
-              : 'bg-gradient-to-br from-yellow-100 via-orange-100 to-pink-100 border-2 border-orange-400 shadow-2xl'
+              ? 'bg-blue-50 border-2 border-blue-400 shadow-lg'
+              : 'bg-orange-50 border-2 border-orange-400 shadow-2xl'
           }`}
         >
           {phase === 'idle' && (
@@ -171,7 +171,7 @@ export default function StudentPicker() {
           {phase === 'spinning' && (
             <span
               key={displayName}
-              className="relative text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent select-none z-10"
+              className="relative text-3xl font-black text-blue-600 select-none z-10"
               style={{ animation: 'pop 0.1s ease-out' }}
             >
               {displayName}
@@ -180,7 +180,7 @@ export default function StudentPicker() {
           {phase === 'done' && (
             <div className="relative text-center z-10" style={{ animation: 'bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
               <div className="text-xs font-medium text-orange-600 mb-1">당첨</div>
-              <span className="text-5xl font-black bg-gradient-to-r from-orange-600 via-red-500 to-pink-600 bg-clip-text text-transparent select-none">
+              <span className="text-5xl font-black text-orange-600 select-none">
                 {pickedStudent}
               </span>
             </div>
@@ -202,7 +202,7 @@ export default function StudentPicker() {
         <button
           onClick={handlePick}
           disabled={phase === 'spinning' || availableStudents.length === 0}
-          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="px-8 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {phase === 'done' ? '다시 뽑기' : '뽑기'}
         </button>
