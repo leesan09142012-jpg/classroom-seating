@@ -804,7 +804,6 @@ export default function SeatShuffle({ onUnsavedChange }) {
 
                   // Skip secondary paired cells visually — or show them
                   const seatNum = cell.seatNumber;
-                  const displayName = displayAssignment[seatNum] || '';
                   const isStopped = stoppedSeats.has(seatNum);
 
                   return (
@@ -820,14 +819,14 @@ export default function SeatShuffle({ onUnsavedChange }) {
                         }
                       `}
                     >
-                      <span className="text-[10px] text-white/40 leading-none">{seatNum}</span>
-                      <span
-                        className={`font-bold truncate w-full text-center leading-tight mt-0.5 ${
-                          isStopped ? 'text-blue-300' : 'text-white/80'
-                        }`}
-                      >
-                        {displayName}
-                      </span>
+                      {isStopped ? (
+                        <span className="font-black text-blue-300 text-2xl leading-none">{seatNum}</span>
+                      ) : (
+                        <>
+                          <span className="text-[10px] text-white/40 leading-none">{seatNum}</span>
+                          <span className="font-bold w-full text-center leading-tight mt-0.5 text-xl text-white/60 animate-pulse">?</span>
+                        </>
+                      )}
                     </div>
                   );
                 })
