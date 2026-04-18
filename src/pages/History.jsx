@@ -255,7 +255,7 @@ export default function History() {
   // Empty state
   if (history.length === 0) {
     return (
-      <div className="space-y-8">
+      <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center py-20">
           <div className="text-6xl mb-4 opacity-40">
             <svg
@@ -337,7 +337,7 @@ export default function History() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
