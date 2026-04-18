@@ -181,7 +181,7 @@ export default function StudentPicker() {
           onClick={() => setSoundEnabled((v) => !v)}
           className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 rounded border border-gray-200"
         >
-          {soundEnabled ? '🔊 소리 ON' : '🔇 소리 OFF'}
+          {soundEnabled ? '소리 ON' : '소리 OFF'}
         </button>
       </div>
 
@@ -211,7 +211,7 @@ export default function StudentPicker() {
           }`}
         >
           {phase === 'idle' && (
-            <span className="text-6xl text-gray-300 select-none">🎲</span>
+            <span className="text-4xl text-gray-300 select-none font-light">?</span>
           )}
           {phase === 'spinning' && (
             <span
@@ -224,7 +224,7 @@ export default function StudentPicker() {
           )}
           {phase === 'done' && (
             <div className="relative text-center z-10" style={{ animation: 'bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-              <div className="text-xs font-medium text-orange-600 mb-1">🎉 당첨</div>
+              <div className="text-xs font-medium text-orange-600 mb-1">당첨</div>
               <span className="text-5xl font-black bg-gradient-to-r from-orange-600 via-red-500 to-pink-600 bg-clip-text text-transparent select-none">
                 {pickedStudent}
               </span>
@@ -249,7 +249,7 @@ export default function StudentPicker() {
           disabled={phase === 'spinning' || availableStudents.length === 0}
           className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          {phase === 'done' ? '🎲 다시 뽑기' : '🎲 뽑기'}
+          {phase === 'done' ? '다시 뽑기' : '뽑기'}
         </button>
         {phase === 'done' && (
           <button
