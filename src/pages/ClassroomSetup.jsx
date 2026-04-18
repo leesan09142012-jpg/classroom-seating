@@ -1,7 +1,13 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { loadLayout as dsLoadLayout, saveLayout as dsSaveLayout } from '../lib/dataService';
+import {
+  loadLayout as dsLoadLayout,
+  saveLayout as dsSaveLayout,
+  loadStudents as dsLoadStudents,
+  saveHistoryRecord as dsSaveHistoryRecord,
+} from '../lib/dataService';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../components/Toast';
 
 function createCell(type = 'seat') {
   return { type, seatNumber: null };
@@ -36,6 +42,7 @@ function stripGrid(grid) {
 
 export default function ClassroomSetup({ onNavigate }) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [initialLoaded, setInitialLoaded] = useState(false);
   const savedRef = useRef(null);
 
@@ -136,20 +143,97 @@ export default function ClassroomSetup({ onNavigate }) {
     return nums.size;
   }, [grid]);
 
+  // ─── 즉석 자리 뽑기 ─────────────────────────────────────────────
+  const [assignment, setAssignment] = useState(null); // { seatNumber: studentName }
+  const [shuffling, setShuffling] = useState(false);
+
+  const handleQuickShuffle = useCallback(async () => {
+    if (seatCount === 0 || shuffling) return;
+    setShuffling(true);
+    try {
+      const data = await dsLoadStudents(user?.id);
+      const students = data.students || [];
+      if (students.length === 0) {
+        showToast('학생이 없습니다. 학생 관리에서 등록해주세요.', 'error');
+        setShuffling(false);
+        return;
+      }
+
+      const seatNums = [];
+      grid.forEach((row) => row.forEach((cell) => {
+        if (cell.seatNumber !== null) seatNums.push(cell.seatNumber);
+      }));
+
+      // 학생을 무작위로 섞고 자리에 배정
+      const pool = [...students].sort(() => Math.random() - 0.5);
+      const result = {};
+      seatNums.forEach((n, i) => {
+        if (pool[i]) result[n] = pool[i].name;
+      });
+      setAssignment(result);
+    } catch {
+      showToast('자리 뽑기에 실패했습니다.', 'error');
+    } finally {
+      setShuffling(false);
+    }
+  }, [seatCount, shuffling, user?.id, grid, showToast]);
+
+  const handleSaveShuffle = useCallback(async () => {
+    if (!assignment) return;
+    try {
+      await dsSaveHistoryRecord(user?.id, {
+        date: new Date().toISOString(),
+        assignment,
+        adjacencyPairs: [],
+        layout: { rows, cols, cells: rawGrid },
+      });
+      showToast('히스토리에 저장되었습니다.', 'success');
+    } catch {
+      showToast('저장에 실패했습니다.', 'error');
+    }
+  }, [assignment, user?.id, rows, cols, rawGrid, showToast]);
+
+  const handleClearShuffle = useCallback(() => setAssignment(null), []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <h1 className="text-2xl font-bold text-gray-800">교실 설정</h1>
-          <button
-            onClick={() => onNavigate?.('shuffle')}
-            disabled={seatCount === 0}
-            className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-            title={seatCount === 0 ? '좌석이 없습니다' : '자리 뽑기 시작'}
-          >
-            자리 뽑기 →
-          </button>
+          <div className="flex items-center gap-2">
+            {assignment && (
+              <>
+                <button
+                  onClick={handleSaveShuffle}
+                  className="px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+                >
+                  저장
+                </button>
+                <button
+                  onClick={handleClearShuffle}
+                  className="px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 active:scale-95 transition-all"
+                >
+                  지우기
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleQuickShuffle}
+              disabled={seatCount === 0 || shuffling}
+              className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+              title={seatCount === 0 ? '좌석이 없습니다' : '즉석 자리 뽑기'}
+            >
+              {shuffling ? '뽑는 중...' : assignment ? '다시 뽑기' : '자리 뽑기'}
+            </button>
+            <button
+              onClick={() => onNavigate?.('shuffle')}
+              className="px-3 py-2.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              title="슬롯머신 효과로 뽑기"
+            >
+              연출 뽑기
+            </button>
+          </div>
         </div>
 
         {/* Grid size controls */}
@@ -237,23 +321,33 @@ export default function ClassroomSetup({ onNavigate }) {
             {grid.map((row, r) =>
               row.map((cell, c) => {
                 const isEmpty = cell.type === 'empty';
+                const studentName = !isEmpty && assignment ? assignment[cell.seatNumber] : null;
+                const hasStudent = !!studentName;
 
                 return (
                   <div
                     key={`${r}-${c}`}
-                    onMouseDown={(e) => handleMouseDown(r, c, e)}
-                    onMouseEnter={(e) => handleMouseEnter(r, c, e)}
+                    onMouseDown={(e) => !assignment && handleMouseDown(r, c, e)}
+                    onMouseEnter={(e) => !assignment && handleMouseEnter(r, c, e)}
                     className={[
-                      'w-14 h-14 md:w-16 md:h-16 flex items-center justify-center',
-                      'text-sm font-bold select-none cursor-pointer transition-all duration-150',
+                      'w-14 h-14 md:w-16 md:h-16 flex flex-col items-center justify-center',
+                      'text-sm font-bold select-none transition-all duration-150',
+                      assignment ? '' : 'cursor-pointer',
                       isEmpty
                         ? 'border-2 border-dashed border-gray-300 bg-gray-100 text-gray-300 rounded-lg hover:border-gray-400'
+                        : hasStudent
+                        ? 'bg-blue-500 border-2 border-blue-600 text-white rounded-xl shadow-md'
                         : 'bg-blue-50 border-2 border-blue-300 text-blue-700 rounded-xl hover:bg-blue-100 hover:border-blue-400 hover:shadow-md',
                     ].join(' ')}
-                    title={isEmpty ? '빈 칸 (복도)' : `좌석 #${cell.seatNumber ?? ''}`}
+                    title={isEmpty ? '빈 칸 (복도)' : hasStudent ? `${studentName} (좌석 #${cell.seatNumber})` : `좌석 #${cell.seatNumber ?? ''}`}
                   >
                     {isEmpty ? (
                       <span className="text-lg">·</span>
+                    ) : hasStudent ? (
+                      <>
+                        <span className="text-[9px] font-normal text-blue-100 leading-none">{cell.seatNumber}</span>
+                        <span className="text-xs leading-tight mt-0.5 truncate max-w-full px-0.5">{studentName}</span>
+                      </>
                     ) : (
                       <span>{cell.seatNumber}</span>
                     )}
