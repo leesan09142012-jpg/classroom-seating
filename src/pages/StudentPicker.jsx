@@ -128,7 +128,7 @@ export default function StudentPicker() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900">학생 뽑기</h2>
@@ -157,7 +157,7 @@ export default function StudentPicker() {
       {/* Display */}
       <div className="flex justify-center mb-6">
         <div
-          className={`relative w-80 h-56 flex items-center justify-center rounded-2xl overflow-hidden transition-all duration-300 ${
+          className={`relative w-full max-w-2xl h-80 flex items-center justify-center rounded-2xl overflow-hidden transition-all duration-300 ${
             phase === 'idle'
               ? 'bg-gray-50 border-2 border-dashed border-gray-300'
               : phase === 'spinning'
@@ -166,12 +166,12 @@ export default function StudentPicker() {
           }`}
         >
           {phase === 'idle' && (
-            <span className="text-4xl text-gray-300 select-none font-light">?</span>
+            <span className="text-6xl text-gray-300 select-none font-light">?</span>
           )}
           {phase === 'spinning' && (
             <span
               key={displayName}
-              className="relative text-3xl font-black text-blue-600 select-none z-10"
+              className="relative text-5xl font-black text-blue-600 select-none z-10"
               style={{ animation: 'pop 0.1s ease-out' }}
             >
               {displayName}
@@ -179,8 +179,8 @@ export default function StudentPicker() {
           )}
           {phase === 'done' && (
             <div className="relative text-center z-10" style={{ animation: 'bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-              <div className="text-xs font-medium text-blue-600 mb-1">당첨</div>
-              <span className="text-5xl font-black text-blue-600 select-none">
+              <div className="text-sm font-medium text-blue-600 mb-2">당첨</div>
+              <span className="text-7xl font-black text-blue-600 select-none">
                 {pickedStudent}
               </span>
             </div>
