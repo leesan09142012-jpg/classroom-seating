@@ -391,6 +391,22 @@ export default function SeatShuffle({ onUnsavedChange }) {
   const [swapFirst, setSwapFirst] = useState(null); // seatNumber
   const [undoState, setUndoState] = useState(null); // previous assignment for undo
 
+  // ── Reveal state ── (뽑기 결과를 클릭으로 공개)
+  const [revealed, setRevealed] = useState(new Set());
+  const handleRevealSeat = useCallback((seatNumber) => {
+    if (swapMode) return;
+    setRevealed((prev) => {
+      const next = new Set(prev);
+      if (next.has(seatNumber)) next.delete(seatNumber);
+      else next.add(seatNumber);
+      return next;
+    });
+  }, [swapMode]);
+  const handleRevealAll = useCallback(() => {
+    setRevealed(new Set(Object.keys(assignment).map(Number)));
+  }, [assignment]);
+  const handleHideAll = useCallback(() => setRevealed(new Set()), []);
+
   // Refs for animation cleanup
   const slotTimerRef = useRef(null);
   const stopTimerRef = useRef(null);
@@ -425,6 +441,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
         if (parsed.assignment) {
           setAssignment(parsed.assignment);
           setPhase('done');
+          setRevealed(new Set(Object.keys(parsed.assignment).map(Number)));
         }
         localStorage.removeItem('loaded-assignment');
       }
@@ -484,6 +501,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
 
     setAssignment(newAssignment);
     setPhase('done');
+    setRevealed(new Set(Object.keys(newAssignment).map(Number)));
     setErrors([]);
     setSwapMode(false);
     setSwapFirst(null);
@@ -597,6 +615,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
           setSlotDisplay(finalAssignment);
           setStoppedSeats(new Set(orderedSeats.map((s) => s.seatNumber)));
           setPhase('done');
+          setRevealed(new Set());
           setFullscreen(false);
           playFanfare(soundEnabled);
           return;
@@ -887,6 +906,19 @@ export default function SeatShuffle({ onUnsavedChange }) {
         </div>
       )}
 
+      {/* Reveal controls (뽑기 후 클릭으로 공개) */}
+      {phase === 'done' && !swapMode && Object.keys(assignment).length > 0 && (
+        <div className="flex justify-center items-center gap-2 mb-4 text-sm">
+          <span className="text-gray-500">좌석을 클릭하면 학생 이름이 공개됩니다</span>
+          <button
+            onClick={revealed.size === Object.keys(assignment).length ? handleHideAll : handleRevealAll}
+            className="px-3 py-1 text-xs font-medium text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            {revealed.size === Object.keys(assignment).length ? '모두 숨기기' : '모두 공개'}
+          </button>
+        </div>
+      )}
+
       {/* Teacher's desk */}
       <div className="flex justify-center mb-4">
         <div className="bg-gray-100 border-2 border-gray-300 rounded-xl px-12 py-2 text-center shadow-sm">
@@ -911,16 +943,25 @@ export default function SeatShuffle({ onUnsavedChange }) {
               const seatNum = cell.seatNumber;
               const studentName = phase === 'done' ? assignment[seatNum] : null;
               const isSwapSelected = swapMode && swapFirst === seatNum;
+              const isRevealed = !!studentName && revealed.has(seatNum);
+              const showName = !!studentName && (swapMode || isRevealed);
+              const isClickableForReveal = !!studentName && phase === 'done' && !swapMode;
 
               return (
                 <div
                   key={`${r}-${c}`}
-                  onClick={() => phase === 'done' && swapMode && handleCellClick(seatNum)}
+                  onClick={() => {
+                    if (phase !== 'done') return;
+                    if (swapMode) handleCellClick(seatNum);
+                    else if (studentName) handleRevealSeat(seatNum);
+                  }}
                   className={`
                     relative w-16 h-16 md:w-20 md:h-20 flex flex-col items-center justify-center
                     rounded-lg border p-1 text-xs sm:text-sm transition-all duration-150 select-none
-                    ${studentName
+                    ${showName
                       ? 'bg-blue-50 border-blue-200'
+                      : studentName
+                      ? 'bg-white border-blue-300 hover:bg-blue-50'
                       : 'bg-white border-gray-200'
                     }
                     ${isSwapSelected
@@ -931,10 +972,11 @@ export default function SeatShuffle({ onUnsavedChange }) {
                       ? 'cursor-pointer hover:shadow-md hover:scale-105 active:scale-95'
                       : ''
                     }
+                    ${isClickableForReveal ? 'cursor-pointer hover:shadow-md' : ''}
                   `}
                 >
                   <span className="text-[10px] text-gray-400 leading-none">{seatNum}</span>
-                  {studentName && (
+                  {showName && (
                     <span className="font-medium text-gray-800 truncate w-full text-center leading-tight mt-0.5">
                       {studentName}
                     </span>

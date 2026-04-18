@@ -17,9 +17,9 @@ const TABS = [
   { id: 'history', label: '히스토리' },
 ]
 
-function TabContent({ activeTab, onUnsavedChange, onNavigate }) {
+function TabContent({ activeTab, onUnsavedChange }) {
   switch (activeTab) {
-    case 'setup': return <ClassroomSetup onNavigate={onNavigate} />
+    case 'setup': return <ClassroomSetup />
     case 'students': return <StudentManage />
     case 'shuffle': return <SeatShuffle onUnsavedChange={onUnsavedChange} />
     case 'pick': return <StudentPicker />
@@ -109,7 +109,7 @@ function MainApp() {
 
       {/* Content */}
       <main className="max-w-full px-4 mx-auto p-4">
-        <TabContent activeTab={activeTab} onUnsavedChange={handleUnsavedChange} onNavigate={handleTabClick} />
+        <TabContent activeTab={activeTab} onUnsavedChange={handleUnsavedChange} />
       </main>
 
       <ConfirmDialog
