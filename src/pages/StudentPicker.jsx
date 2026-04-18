@@ -240,31 +240,17 @@ export default function StudentPicker() {
           <ol className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden bg-white">
             {[...pickedHistory].reverse().map((name, i) => {
               const order = pickedHistory.length - i;
-              const isLatest = i === 0;
               return (
                 <li
                   key={`${order}-${name}`}
-                  className={`flex items-center gap-3 px-4 py-2.5 ${
-                    isLatest ? 'bg-orange-50' : ''
-                  }`}
+                  className="flex items-center gap-3 px-4 py-3"
                 >
-                  <span
-                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                      isLatest
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
+                  <span className="inline-flex items-center justify-center min-w-[1.25rem] text-[11px] font-medium text-gray-400">
                     {order}
                   </span>
-                  <span className={`text-sm ${isLatest ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
+                  <span className="text-lg font-bold text-gray-900">
                     {name}
                   </span>
-                  {isLatest && (
-                    <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
-                      최근
-                    </span>
-                  )}
                 </li>
               );
             })}
