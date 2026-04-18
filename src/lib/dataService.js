@@ -23,13 +23,23 @@ function localRemove(key) {
   } catch { /* ignore */ }
 }
 
-// ─── Keys ──────────────────────────────────────────────────────────
+// ─── Keys (계정별 분리) ───────────────────────────────────────────
 
-const KEYS = {
+const BASE_KEYS = {
   layout: 'classroom-layout',
   students: 'student-list',
   history: 'seat-history',
   settings: 'app-settings',
+}
+
+function KEYS(userId) {
+  const suffix = userId ? ':' + userId : ''
+  return {
+    layout: BASE_KEYS.layout + suffix,
+    students: BASE_KEYS.students + suffix,
+    history: BASE_KEYS.history + suffix,
+    settings: BASE_KEYS.settings + suffix,
+  }
 }
 
 // ─── Layout ────────────────────────────────────────────────────────
@@ -47,11 +57,11 @@ export async function loadLayout(userId) {
       return { rows: data.rows, cols: data.cols, grid: data.grid }
     }
   }
-  return localGet(KEYS.layout)
+  return localGet(KEYS(userId).layout)
 }
 
 export async function saveLayout(userId, rows, cols, grid) {
-  localSet(KEYS.layout, { rows, cols, grid })
+  localSet(KEYS(userId).layout, { rows, cols, grid })
 
   if (isSupabaseEnabled() && userId) {
     const payload = { teacher_id: userId, rows, cols, grid, updated_at: new Date().toISOString() }
@@ -83,11 +93,11 @@ export async function loadStudents(userId) {
       return { students: data.students || [], groups: data.groups || [] }
     }
   }
-  return localGet(KEYS.students) || { students: [], groups: [] }
+  return localGet(KEYS(userId).students) || { students: [], groups: [] }
 }
 
 export async function saveStudents(userId, studentData) {
-  localSet(KEYS.students, studentData)
+  localSet(KEYS(userId).students, studentData)
 
   if (isSupabaseEnabled() && userId) {
     const payload = { teacher_id: userId, ...studentData, updated_at: new Date().toISOString() }
@@ -125,15 +135,14 @@ export async function loadHistory(userId) {
       }))
     }
   }
-  const raw = localGet(KEYS.history)
+  const raw = localGet(KEYS(userId).history)
   return Array.isArray(raw) ? raw : []
 }
 
 export async function saveHistoryRecord(userId, record) {
-  // Also update localStorage
-  const local = localGet(KEYS.history) || []
+  const local = localGet(KEYS(userId).history) || []
   local.push(record)
-  localSet(KEYS.history, local)
+  localSet(KEYS(userId).history, local)
 
   if (isSupabaseEnabled() && userId) {
     await supabase.from('seat_history').insert({
@@ -147,11 +156,10 @@ export async function saveHistoryRecord(userId, record) {
 }
 
 export async function deleteHistoryRecord(userId, index) {
-  // localStorage: remove by index
-  const local = localGet(KEYS.history) || []
+  const local = localGet(KEYS(userId).history) || []
   const removed = local[index]
   local.splice(index, 1)
-  localSet(KEYS.history, local)
+  localSet(KEYS(userId).history, local)
 
   if (isSupabaseEnabled() && userId && removed?.id) {
     await supabase.from('seat_history').delete().eq('id', removed.id)
@@ -159,7 +167,7 @@ export async function deleteHistoryRecord(userId, index) {
 }
 
 export async function clearAllHistory(userId) {
-  localSet(KEYS.history, [])
+  localSet(KEYS(userId).history, [])
 
   if (isSupabaseEnabled() && userId) {
     await supabase.from('seat_history').delete().eq('teacher_id', userId)
@@ -169,11 +177,12 @@ export async function clearAllHistory(userId) {
 // ─── Full reset ────────────────────────────────────────────────────
 
 export async function resetAllData(userId) {
-  localRemove(KEYS.layout)
-  localRemove(KEYS.students)
-  localRemove(KEYS.history)
+  const keys = KEYS(userId)
+  localRemove(keys.layout)
+  localRemove(keys.students)
+  localRemove(keys.history)
   localRemove('loaded-assignment')
-  localRemove('app-settings')
+  localRemove(keys.settings)
 
   if (isSupabaseEnabled() && userId) {
     await Promise.all([
@@ -187,14 +196,15 @@ export async function resetAllData(userId) {
 
 // ─── JSON Backup / Restore ─────────────────────────────────────────
 
-export function exportBackup() {
+export function exportBackup(userId) {
+  const keys = KEYS(userId)
   return {
     version: 1,
     exportDate: new Date().toISOString(),
     data: {
-      [KEYS.layout]: localGet(KEYS.layout),
-      [KEYS.students]: localGet(KEYS.students),
-      [KEYS.history]: localGet(KEYS.history),
+      [BASE_KEYS.layout]: localGet(keys.layout),
+      [BASE_KEYS.students]: localGet(keys.students),
+      [BASE_KEYS.history]: localGet(keys.history),
     },
   }
 }
@@ -203,23 +213,24 @@ export async function importBackup(userId, backupData) {
   const { data } = backupData
   if (!data || typeof data !== 'object') throw new Error('Invalid backup format')
 
+  const keys = KEYS(userId)
+  const userSuffix = userId ? ':' + userId : ''
+
   Object.entries(data).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
-      localSet(key, value)
+      localSet(key + userSuffix, value)
     }
   })
 
-  // If Supabase enabled, sync local data to cloud
   if (isSupabaseEnabled() && userId) {
-    const layout = localGet(KEYS.layout)
+    const layout = localGet(keys.layout)
     if (layout) await saveLayout(userId, layout.rows, layout.cols, layout.grid)
 
-    const students = localGet(KEYS.students)
+    const students = localGet(keys.students)
     if (students) await saveStudents(userId, students)
 
-    // History: clear and re-insert
     await clearAllHistory(userId)
-    const history = localGet(KEYS.history) || []
+    const history = localGet(keys.history) || []
     for (const record of history) {
       await saveHistoryRecord(userId, record)
     }
