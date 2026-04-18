@@ -961,7 +961,7 @@ export default function SeatShuffle({ onUnsavedChange }) {
                 >
                   <span className="text-[10px] text-gray-400 leading-none">{seatNum}</span>
                   {showName && (
-                    <span className="font-medium text-gray-800 truncate w-full text-center leading-tight mt-0.5">
+                    <span className="font-bold text-gray-900 truncate w-full text-center leading-tight mt-0.5 text-base md:text-lg">
                       {studentName}
                     </span>
                   )}
