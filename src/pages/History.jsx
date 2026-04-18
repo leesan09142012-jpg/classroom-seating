@@ -367,7 +367,7 @@ export default function History() {
       </div>
 
       {/* History cards */}
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         {history.map((record, index) => {
           const isOpen = selectedIndex === index;
           const count = getStudentCount(record.assignment);
@@ -382,68 +382,55 @@ export default function History() {
               {/* Card header - always visible */}
               <div
                 onClick={() => setSelectedIndex(isOpen ? null : index)}
-                className="flex items-center gap-4 px-6 py-5 cursor-pointer select-none"
+                className="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none"
               >
-                {/* Date column - bigger and clearer */}
-                <div className="shrink-0 text-center w-20">
-                  <div className="text-2xl font-bold text-gray-900 leading-tight">
+                {/* Date */}
+                <div className="shrink-0 w-16">
+                  <div className="text-sm font-bold text-gray-900 leading-tight">
                     {formatDateShort(record.date)}
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
+                  <div className="text-[10px] text-gray-400 leading-tight">
                     {formatTime(record.date)}
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div className="w-px h-12 bg-gray-200 shrink-0" />
-
-                {/* Info badges */}
-                <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                    학생 {count}명
-                  </span>
+                {/* Info */}
+                <div className="flex-1 min-w-0 flex items-center gap-2 text-xs text-gray-600">
+                  <span className="font-semibold text-blue-700">{count}명</span>
                   {getLayoutDims(record.layout) && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
-                      {getLayoutDims(record.layout)} 자리
-                    </span>
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span>{getLayoutDims(record.layout)}</span>
+                    </>
                   )}
-                  <span className="text-xs text-gray-400">
-                    {formatRelative(record.date)}
-                  </span>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-gray-400">{formatRelative(record.date)}</span>
                 </div>
 
-                {/* Mini preview */}
-                {record.layout && !isOpen && (
-                  <div className="hidden sm:block shrink-0">
-                    <MiniGridPreview layout={record.layout} assignment={record.assignment} />
-                  </div>
-                )}
-
                 {/* Actions */}
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedIndex(index);
                       handleLoad();
                     }}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="이 배치 불러오기"
                   >
                     <LoadIcon />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteRecord(index); }}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                     title="삭제"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                  {/* Chevron */}
                   <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
