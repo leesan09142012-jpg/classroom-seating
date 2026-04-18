@@ -238,22 +238,19 @@ export default function StudentPicker() {
             </button>
           </div>
           <ol className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden bg-white">
-            {[...pickedHistory].reverse().map((name, i) => {
-              const order = pickedHistory.length - i;
-              return (
-                <li
-                  key={`${order}-${name}`}
-                  className="flex items-center gap-3 px-4 py-3"
-                >
-                  <span className="inline-flex items-center justify-center min-w-[1.25rem] text-[11px] font-medium text-gray-400">
-                    {order}
-                  </span>
-                  <span className="text-lg font-bold text-gray-900">
-                    {name}
-                  </span>
-                </li>
-              );
-            })}
+            {pickedHistory.map((name, i) => (
+              <li
+                key={`${i}-${name}`}
+                className="flex items-center gap-3 px-4 py-3"
+              >
+                <span className="inline-flex items-center justify-center min-w-[1.25rem] text-[11px] font-medium text-gray-400">
+                  {i + 1}
+                </span>
+                <span className="text-lg font-bold text-gray-900">
+                  {name}
+                </span>
+              </li>
+            ))}
           </ol>
         </div>
       )}
